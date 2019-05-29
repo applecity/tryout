@@ -3,6 +3,8 @@ package org.yeyu.ssh;
 import com.jcraft.jsch.*;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -140,6 +142,44 @@ public class SSHManager
         }
 
         return outputBuffer.toString();
+    }
+
+    public List<String> sendCommands(List<String> commands)
+    {
+        List<String> ret = new ArrayList<>(commands.size());
+
+
+        try
+        {
+            for(String command : commands) {
+                Channel channel = sesConnection.openChannel("exec");
+                ((ChannelExec)channel).setCommand(command);
+                InputStream commandOutput = channel.getInputStream();
+                channel.connect();
+                int readByte = commandOutput.read();
+
+                StringBuilder outputBuffer = new StringBuilder();
+                while(readByte != 0xffffffff) {
+                    outputBuffer.append((char) readByte);
+                    readByte = commandOutput.read();
+                }
+                ret.add(outputBuffer.toString());
+                channel.disconnect();
+            }
+
+        }
+        catch(IOException ioX)
+        {
+            logWarning(ioX.getMessage());
+            return null;
+        }
+        catch(JSchException jschX)
+        {
+            logWarning(jschX.getMessage());
+            return null;
+        }
+
+        return ret;
     }
 
     public void close()

@@ -2,14 +2,36 @@ package org.yeyu.simpletest;
 
 import org.apache.commons.validator.routines.InetAddressValidator;
 
+import java.text.MessageFormat;
+import java.util.HashMap;
+import java.util.Map;
+
 public class Try1 {
     public static void main(String... args) {
-        boolean f;
+
+        Double d1 = new Double(1);
+        Double d2 = new Double(2);
+        System.out.println(d1 + d2);
+
+
+        System.out.println(String.format("progress %d", 2*100/3));
+//        boolean f;
 //        f = new Try1().isValidInet6Address("172.16.100.10");
-        f = new InetAddressValidator().isValidInet6Address("172.16.100.10");
-        System.out.println(f);
-        f = new InetAddressValidator().isValidInet4Address("172.16.100.10");
-        System.out.println(f);
+
+//        f = new InetAddressValidator().isValidInet6Address("172.16.100.10");
+//        System.out.println(f);
+//        f = new InetAddressValidator().isValidInet4Address("172.16.100.10");
+//        System.out.println(f);
+
+        System.out.println(0b10_00000000);
+
+        Map<String, String> mm = new HashMap<>();
+        mm.put("a", null);
+        String v = mm.get("a");
+
+        String got = StsInventoryNodesType.getStartWithExp(StsInventoryNodesType.ENCLOSURE);
+        System.out.println(got);
+
     }
 
     /**

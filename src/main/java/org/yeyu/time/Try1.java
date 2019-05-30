@@ -9,11 +9,11 @@ public class Try1 {
         d1();
     }
     static void d1() {
-//        LocalDate endDate = LocalDate.parse("2022-05-30");
-//        System.out.println(endDate.compareTo(LocalDate.now()) < 0);
-//
-//        Period p = Period.between(LocalDate.now(), endDate);
-//        System.out.println(String.format("remains %d year %d month %d day", p.getYears(), p.getMonths(), p.getDays()));
+        LocalDate endDate = LocalDate.parse("2022-05-30");
+        System.out.println(endDate.compareTo(LocalDate.now()) < 0);
+
+        Period p = Period.between(LocalDate.now(), endDate);
+        System.out.println(String.format("remains %d year %d month %d day", p.getYears(), p.getMonths(), p.getDays()));
 
         LocalDateTime oneDT = LocalDateTime.parse("2019-04-12T15:51:00");
         oneDT = LocalDateTime.ofEpochSecond(1555055497, 0, ZoneOffset.ofHours(8));

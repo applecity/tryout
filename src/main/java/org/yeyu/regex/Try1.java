@@ -87,8 +87,13 @@ public class Try1 {
         }
     }
 
+    static void d5() {
+        System.out.println("abc d.json".replaceAll ("(?i)\\.json", ""));
+        System.out.println("tHinkk  j".replaceAll("(?i)think|server|lenovo|\\s+", ""));
+    }
+
     public static void main(String... a) throws UnknownHostException {
-        d4();
+        d5();
     }
 
 }

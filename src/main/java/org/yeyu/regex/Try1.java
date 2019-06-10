@@ -92,8 +92,21 @@ public class Try1 {
         System.out.println("tHinkk  j".replaceAll("(?i)think|server|lenovo|\\s+", ""));
     }
 
+    protected static InetAddress extractAddress(String line) throws UnknownHostException {
+        Pattern pattern = Pattern.compile("([^/]*//)((?:\\[[a-f0-9\\:]+\\])|(?:[^,:]*))(?:\\:\\d+)?(,.*)",
+                Pattern.CASE_INSENSITIVE);
+        Matcher matcher = pattern.matcher(line);
+        if (matcher.matches()) {
+            return InetAddress.getByName(matcher.group(2));
+        }
+        return null;
+    }
+
     public static void main(String... a) throws UnknownHostException {
-        d5();
+        String xx = "service:SMASHOverSSH://10.111.70.252:22,65535";
+        xx = "service:SMASHOverSSH://1234567123456712345671234567:22,65535";
+        InetAddress ipaddr = extractAddress(xx);
+        System.out.println(ipaddr.getHostAddress());
     }
 
 }

@@ -1,12 +1,18 @@
 package org.yeyu.protocol;
 
 
+import org.apache.commons.exec.CommandLine;
+import org.apache.commons.exec.DefaultExecutor;
+import org.apache.commons.exec.LogOutputStream;
+import org.apache.commons.exec.PumpStreamHandler;
+
 import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.logging.*;
 import java.util.regex.Matcher;
@@ -14,8 +20,8 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Slptool {
-    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "sudo /usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
-//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"./slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
+//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
+    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:management-hardware.Lenovo"};
     Logger lgr = Logger.getLogger("slptool");
 
     public static void main(String... a) {
@@ -29,7 +35,7 @@ public class Slptool {
     void d1() {
         lgr.info("start");
         List<InetAddress> ias = thinkserverMulticastFinder();
-        ias.stream().forEach(inetAddress -> lgr.info(inetAddress.toString()));
+//        ias.stream().forEach(inetAddress -> lgr.info(inetAddress.toString()));
         lgr.info("end");
     }
 
@@ -50,6 +56,28 @@ public class Slptool {
 
     public List<String> hsServerFinder() {
         return slpMulticastRunner(SLPTOOL_MULTICAST_COMMAND_HYPERSCALE);
+//        return slpMulticastRunner2();
+    }
+
+    public List<String> slpMulticastRunner2() {
+        List<String> empty = new ArrayList<>();
+
+//        String line = "/usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\"";
+        String line = "/usr/bin/slptool findsrvs service:management-hardware.Lenovo";
+        CommandLine cmdLine = CommandLine.parse(line);
+        DefaultExecutor exec = new DefaultExecutor();
+
+        CollectingLogOutputStream clos = new CollectingLogOutputStream();
+        exec.setStreamHandler(new PumpStreamHandler(clos));
+
+        try {
+            exec.execute(cmdLine);
+        } catch (IOException e) {
+            lgr.severe(e.getMessage());
+        }
+
+        clos.getLines().stream().forEach(s -> lgr.info("clos: " + s));
+        return clos.getLines();
     }
 
     public List<String> slpMulticastRunner(String[] slptoolCmd) {

@@ -1,27 +1,36 @@
 package org.yeyu.protocol;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+
+import java.io.*;
 import java.net.InetAddress;
 import java.net.UnknownHostException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.logging.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Slptool {
-    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
+    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "sudo /usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
+//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"./slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
+    Logger lgr = Logger.getLogger("slptool");
 
     public static void main(String... a) {
         new Slptool().d1();
     }
 
+    Slptool() {
+        setLogingProperties(lgr, Level.ALL);
+    }
+
     void d1() {
+        lgr.info("start");
         List<InetAddress> ias = thinkserverMulticastFinder();
-        ias.stream().forEach(inetAddress -> System.out.println(inetAddress.toString()));
+        ias.stream().forEach(inetAddress -> lgr.info(inetAddress.toString()));
+        lgr.info("end");
     }
 
     private List<InetAddress> thinkserverMulticastFinder() {
@@ -32,7 +41,7 @@ public class Slptool {
                 try {
                     list.add(extractAddress(line));
                 } catch (UnknownHostException e) {
-                    e.printStackTrace();
+                    lgr.severe(e.getMessage());
                 }
             }
         }
@@ -49,31 +58,50 @@ public class Slptool {
             Process slpProc = Runtime.getRuntime().exec(slptoolCmd);
             int rc = slpProc.waitFor();
             if (rc != 0) {
-                System.out.println("RC {} executing slptool--" + rc);
+                lgr.severe("RC {} executing slptool--" + rc);
                 return (empty);
             }
 
-            InputStream slptoolOut = slpProc.getInputStream();
-            if (slptoolOut == null) {
-                System.out.println("Null input stream from slptool exec");
-                return (empty);
-            }
-
+            lgr.info("1");
             List<String> lines = new ArrayList<>();
-            BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(slptoolOut));
-            String lineString = null;
-            while ((lineString = bufferedReader.readLine()) != null) {
-                lines.add(lineString);
+            try (InputStream slptoolOut = slpProc.getInputStream(); BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(slptoolOut))) {
+                String lineString = null;
+                while ((lineString = bufferedReader.readLine()) != null) {
+                    lines.add(lineString);
+                }
+
+                if (lines == null || lines.size() <= 0) {
+                    lgr.severe("No output from slptool Multicast exec, cmd:" + Stream.of(slptoolCmd).reduce((s1, s2) -> s1 + " " + s2).get());
+                } else {
+                    lines.stream().forEach(s -> lgr.info("is: " + s));
+                }
+            } catch (Exception e) {
+                lgr.severe("1 exception");
+                lgr.severe(e.getMessage());
             }
 
-            if (lines == null || lines.size() <= 0) {
-                System.out.println("No output from slptool Multicast exec, cmd:" + Stream.of(slptoolCmd).reduce((s1, s2) -> s1+ " " +s2).get());
-                return (empty);
+            lgr.info("2");
+            try (InputStream slptoolError = slpProc.getErrorStream(); BufferedReader bufferedReader = new BufferedReader(new InputStreamReader(slptoolError))) {
+                List<String> errLines = new ArrayList<>();
+                String lineString = null;
+                while ((lineString = bufferedReader.readLine()) != null) {
+                    errLines.add(lineString);
+                }
+
+                if (errLines == null || errLines.size() <= 0) {
+                    lgr.severe("No error output from slptool Multicast exec, cmd:" + Stream.of(slptoolCmd).reduce((s1, s2) -> s1 + " " + s2).get());
+                } else {
+                    errLines.stream().forEach(s -> lgr.info("es: " + s));
+                }
+            } catch (Exception e) {
+                lgr.severe("2 exception");
+                lgr.severe(e.getMessage());
             }
 
             return lines;
         } catch (IOException | InterruptedException e) {
-            e.printStackTrace();
+            lgr.severe("3 exception");
+            lgr.severe(e.getMessage());
             return (empty);
         }
     } /* slpMulticastRunner */
@@ -86,5 +114,45 @@ public class Slptool {
             return InetAddress.getByName(matcher.group(2));
         }
         return null;
+    }
+
+    /**
+     * 配置Logger对象输出日志文件路径
+     *
+     * @param logger
+     * @param level  在日志文件中输出level级别以上的信息
+     * @throws SecurityException
+     * @throws IOException
+     */
+    public void setLogingProperties(Logger logger, Level level) {
+        FileHandler fh;
+        try {
+            fh = new FileHandler(getLogName(), true);
+            logger.addHandler(fh);// 日志输出文件
+            logger.setLevel(level);
+            fh.setFormatter(new SimpleFormatter());// 输出格式
+            // logger.addHandler(new ConsoleHandler());//输出到控制台
+        } catch (SecurityException e) {
+            logger.log(Level.SEVERE, "安全性错误", e);
+        } catch (IOException e) {
+            logger.log(Level.SEVERE, "读取文件日志错误", e);
+        }
+    }
+
+    /**
+     * 得到要记录的日志的路径及文件名称
+     *
+     * @return
+     */
+    private String getLogName() {
+        StringBuffer logPath = new StringBuffer();
+        logPath.append(System.getProperty("user.home"));
+        logPath.append("//slptest");
+        File file = new File(logPath.toString());
+        if (!file.exists())
+            file.mkdir();
+        SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd");
+        logPath.append("//" + sdf.format(new Date()) + ".log");
+        return logPath.toString();
     }
 }

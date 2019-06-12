@@ -20,8 +20,9 @@ import java.util.regex.Pattern;
 import java.util.stream.Stream;
 
 public class Slptool {
-//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\""};
-    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:management-hardware.Lenovo"};
+    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\"|wc -l"};
+//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "pwd"};
+//    final static String[] SLPTOOL_MULTICAST_COMMAND_HYPERSCALE = {"/bin/sh", "-c", "/usr/bin/slptool findsrvs service:management-hardware.Lenovo"};
     Logger lgr = Logger.getLogger("slptool");
 
     public static void main(String... a) {
@@ -63,7 +64,9 @@ public class Slptool {
         List<String> empty = new ArrayList<>();
 
 //        String line = "/usr/bin/slptool findsrvs service:SMASHOverSSH \"(service-id=SMASHOverSSH)\"";
-        String line = "/usr/bin/slptool findsrvs service:management-hardware.Lenovo";
+//        String line = "pwd";
+        String line = "/bin/sh /root/slpcmd";
+//        String line = "/usr/bin/slptool findsrvs service:management-hardware.Lenovo";
         CommandLine cmdLine = CommandLine.parse(line);
         DefaultExecutor exec = new DefaultExecutor();
 

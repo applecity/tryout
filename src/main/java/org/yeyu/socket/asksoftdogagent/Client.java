@@ -14,7 +14,7 @@ public class Client {
     private static Logger lgr = Logger.getLogger("xx");
     public static void main(String[] args) {
         lgr.setLevel(Level.ALL);
-        queryAgent("sn", "10.112.25.172", "8384");
+        queryAgent("Phoenix BIOS SC-T v2.1+D41811CA-8599-11E8-ABA5-482AE30A671A", "192.168.56.1", "8384");
     }
 
     private static boolean queryAgent(String baseboardSerial, String softDogServiceIp, String softDogServicePort) {
